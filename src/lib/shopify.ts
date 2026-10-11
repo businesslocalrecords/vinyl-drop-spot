@@ -18,7 +18,7 @@ const cartFields = `id checkoutUrl totalQuantity cost{subtotalAmount{amount curr
 export async function cartMutation(operation:'cartCreate'|'cartLinesAdd'|'cartLinesUpdate'|'cartLinesRemove',variables:Record<string,unknown>):Promise<Cart>{
  const args = {cartCreate:'($input:CartInput!){cartCreate(input:$input)',cartLinesAdd:'($cartId:ID!,$lines:[CartLineInput!]!){cartLinesAdd(cartId:$cartId,lines:$lines)',cartLinesUpdate:'($cartId:ID!,$lines:[CartLineUpdateInput!]!){cartLinesUpdate(cartId:$cartId,lines:$lines)',cartLinesRemove:'($cartId:ID!,$lineIds:[ID!]!){cartLinesRemove(cartId:$cartId,lineIds:$lineIds)'};
  const data=await storefrontApiRequest<Record<string,{cart:Cart|null;userErrors:{message:string}[]}>>(`mutation${args[operation]}{cart{${cartFields}} userErrors{message}}}`,variables);
- const result=data[operation]; if(result.userErrors.length) throw new Error(result.userErrors.map(e=>e.message).join(', ')); if(!result.cart) throw new Error('Cart not found');
+ const result=data[operation]; if(!result) throw new Error("Shopify returned no cart result"); if(result.userErrors.length) throw new Error(result.userErrors.map(e=>e.message).join(', ')); if(!result.cart) throw new Error('Cart not found');
  const url=new URL(result.cart.checkoutUrl);url.searchParams.set('channel','online_store');return {...result.cart,checkoutUrl:url.toString()};
 }
 export async function fetchCart(id:string){const data=await storefrontApiRequest<{cart:Cart|null}>(`query($id:ID!){cart(id:$id){${cartFields}}}`,{id});return data.cart;}

@@ -1,4 +1,4 @@
-import { Link, useHydrated } from '@tanstack/react-router';
+import { Link, useHydrated, type ErrorComponentProps } from '@tanstack/react-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowUpRight, Disc3, Search, ShoppingBag, Minus, Plus, Trash2, LockKeyhole, Menu, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,4 +16,4 @@ export function StoreLayout({children}:{children:ReactNode}) {
 }
 export function ProductCard({product}:{product:Product}){const {add,busy}=useCart();const variant=product.variants.edges[0]?.node;return <article className="product-card"><Link to="/product/$handle" params={{handle:product.handle}} className="product-art">{product.images.edges[0]?<img loading="lazy" src={product.images.edges[0].node.url} alt={product.images.edges[0].node.altText||product.title}/>:<Disc3 size={100}/>}</Link><div className="product-info"><span>{product.vendor}</span><Link to="/product/$handle" params={{handle:product.handle}}><h3>{product.title}</h3></Link><div><strong>{money(product.priceRange.minVariantPrice)}</strong><span>Vinyl LP</span></div></div><Button variant="outline" disabled={busy||!variant?.availableForSale} onClick={async()=>{if(variant&&await add(variant.id))window.dispatchEvent(new Event('open-shopping-bag'));}}>{variant?.availableForSale?'Add to bag':'Unavailable'}<Plus/></Button></article>;}
 export function EmptyRecords(){return <div className="empty-records"><Disc3 size={42} strokeWidth={1}/><h3>No products found</h3><p>The next great finds are on their way.</p></div>;}
-export function StoreError({error}:{error:Error}){return <StoreLayout><div className="empty-records" role="alert"><h2>Records couldn’t load</h2><p>{error.message}</p><Button onClick={()=>window.location.reload()}>Try again</Button></div></StoreLayout>;}
+export function StoreError({error}:ErrorComponentProps){return <StoreLayout><div className="empty-records" role="alert"><h2>Records couldn’t load</h2><p>{error instanceof Error ? error.message : "Please try again."}</p><Button onClick={()=>window.location.reload()}>Try again</Button></div></StoreLayout>;}
