@@ -1,24 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
-});
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { ArrowRight, ArrowUpRight, Disc3, AudioLines, LockKeyhole } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { StoreLayout, ProductCard, EmptyRecords, StoreError } from '@/components/store/store-layout';
+import { productsOptions } from '@/lib/shopify';
+import hero from '@/assets/record-hero.jpg';
+export const Route=createFileRoute('/')({head:()=>({meta:[{title:'Vynils Galore — Find your next favorite record'},{name:'description',content:'Discover your next favorite vinyl at Vynils Galore. Explore records across jazz, rock, soul and electronic music.'},{property:'og:title',content:'Vynils Galore — Find your next favorite record'},{property:'og:description',content:'Less scrolling. More spinning. Discover the Vynils Galore record collection.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),loader:({context})=>context.queryClient.ensureQueryData(productsOptions),component:Home,errorComponent:StoreError,notFoundComponent:()=> <p>Page not found</p>});
+function Home(){const {data:products}=useSuspenseQuery(productsOptions);return <StoreLayout><section className="home-hero"><img className="hero-image" src={hero} width={1536} height={1024} alt="Cobalt blue record sleeve with a black vinyl record"/><div className="hero-content"><div className="eyebrow"><span/> FOR THE LOVE OF VINYL</div><h1>Your next<br/>favorite record<span className="brand-dot">.</span></h1><p>The albums you love. The sounds you haven’t met.<br className="desktop-break"/> Find a new reason to put the needle down.</p><Button asChild size="lg" className="hero-cta"><Link to="/records" search={{genre:'All',q:'',sort:'featured'}}>Shop records <ArrowUpRight/></Link></Button><div className="hero-caption"><AudioLines size={17}/><span>Good music deserves a great format.</span></div></div><div className="hero-bottom"><span>ANALOG SOUND. ENDLESS DISCOVERY.</span><span>33⅓ RPM <Disc3 size={15}/></span></div></section><section className="value-strip"><div><Disc3/><span>Find your sound<small>Across genres. Beyond the algorithm.</small></span></div><div><AudioLines/><span>Made for the full album<small>Drop the needle. Stay a little longer.</small></span></div><div><LockKeyhole/><span>Secure checkout<small>Payments powered by Shopify.</small></span></div></section><section className="featured-section"><div className="section-heading"><div><span className="eyebrow">THE NEXT ADDITION TO YOUR COLLECTION</span><h2>In the rotation<span className="brand-dot">.</span></h2></div><Button variant="link" asChild><Link to="/records" search={{genre:'All',q:'',sort:'featured'}}>Explore all records <ArrowRight/></Link></Button></div>{products.length?<div className="product-grid">{products.slice(0,4).map(product=><ProductCard key={product.id} product={product}/>)}</div>:<EmptyRecords/>}</section><section className="genre-section"><div className="section-heading"><div><span className="eyebrow">FOLLOW YOUR EARS</span><h2>Find your frequency.</h2></div><p>Whatever your mood, there’s a record for it.</p></div><div className="genre-grid">{[{name:'Jazz & soul',genre:'Jazz',number:'01',className:'jazz'},{name:'Rock & indie',genre:'Rock',number:'02',className:'rock'},{name:'Electronic',genre:'Electronic',number:'03',className:'electronic'},{name:'Hip-hop',genre:'Hip-hop',number:'04',className:'hiphop'}].map(g=><Link className={`genre-tile ${g.className}`} key={g.genre} to="/records" search={{genre:g.genre,q:'',sort:'featured'}}><span className="genre-number">{g.number} / ON THE RECORD</span><Disc3 className="genre-disc" strokeWidth={0.6}/><span className="genre-name">{g.name}<ArrowUpRight/></span></Link>)}</div></section><section className="closing-band"><Disc3 strokeWidth={1}/><div><span className="eyebrow">MORE THAN BACKGROUND MUSIC</span><h2>Make time for the B-side.</h2><p>Some things just sound better on vinyl.</p></div><Button asChild variant="outline" size="lg"><Link to="/records" search={{genre:'All',q:'',sort:'featured'}}>Find your next record <ArrowUpRight/></Link></Button></section></StoreLayout>;}

@@ -1,0 +1,9 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { cartMutation, fetchCart, type Cart } from '@/lib/shopify';
+type State={cart:Cart|null;busy:boolean;error:string|null;add:(id:string,quantity?:number)=>Promise<boolean>;update:(lineId:string,quantity:number)=>Promise<void>;sync:()=>Promise<void>};
+export const useCart=create<State>()(persist((set,get)=>({cart:null,busy:false,error:null,
+ add:async(id,quantity=1)=>{if(get().busy)return false;set({busy:true,error:null});try{const current=get().cart;const cart=await cartMutation(current?'cartLinesAdd':'cartCreate',current?{cartId:current.id,lines:[{merchandiseId:id,quantity}]}:{input:{lines:[{merchandiseId:id,quantity}]}});set({cart});return true;}catch(e){const error=e instanceof Error?e.message:'Could not add this record';set({error,...(/cart not found|does not exist/i.test(error)?{cart:null}:{})});return false;}finally{set({busy:false});}},
+ update:async(lineId,quantity)=>{const current=get().cart;if(!current||get().busy)return;set({busy:true,error:null});try{const cart=await cartMutation(quantity>0?'cartLinesUpdate':'cartLinesRemove',quantity>0?{cartId:current.id,lines:[{id:lineId,quantity}]}:{cartId:current.id,lineIds:[lineId]});set({cart:cart.totalQuantity?cart:null});}catch(e){const error=e instanceof Error?e.message:'Could not update your bag';set({error,...(/cart not found|does not exist/i.test(error)?{cart:null}:{})});}finally{set({busy:false});}},
+ sync:async()=>{const current=get().cart;if(!current||get().busy)return;set({busy:true});try{const cart=await fetchCart(current.id);set({cart:cart?.totalQuantity?cart:null});}catch(e){set({error:e instanceof Error?e.message:'Could not sync bag'});}finally{set({busy:false});}}
+}),{name:'vynils-shopping-bag',storage:createJSONStorage(()=>localStorage),skipHydration:true,partialize:s=>({cart:s.cart})}));
